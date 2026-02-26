@@ -1,0 +1,15 @@
+# =============================================
+# Nizami Law Firm — Environment Variables
+# =============================================
+# Copy this file to .env and fill in your credentials:
+#   cp .env.example .env
+# =============================================
+
+# Supabase (required)
+# Get these from: https://supabase.com → Your Project → Settings → API
+VITE_SUPABASE_URL=https://hdcxnyucrsmludwraqby.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkY3hueXVjcnNtbHVkd3JhcWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTA1NTEsImV4cCI6MjA4NjU2NjU1MX0.pRe-ILfIt5s1dpj6PrDJx6IT6Zo9Iwwpv5KuwwY9zMQ
+
+# Gemini AI Chat (required for AI chat widget)
+# Get from: https://aistudio.google.com/apikey
+GEMINI_API_KEY=your-gemini-api-key-here
