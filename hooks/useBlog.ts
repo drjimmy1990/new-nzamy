@@ -26,7 +26,7 @@ export function useBlogPosts(options: UseBlogOptions = {}) {
 
         let query = supabase
             .from('blog_posts')
-            .select('*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)', { count: 'exact' })
+            .select('*', { count: 'exact' })
             .eq('is_published', true)
             .eq('is_approved', true)
             .order('published_at', { ascending: false })
@@ -75,7 +75,7 @@ export function useBlogPost(slug: string | undefined) {
 
             const { data } = await supabase
                 .from('blog_posts')
-                .select('*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)')
+                .select('*')
                 .eq('slug', slug)
                 .single();
 
@@ -102,7 +102,7 @@ export function useBlogComments(postId: string | undefined) {
 
         const { data } = await supabase
             .from('blog_comments')
-            .select('*, author:profiles!blog_comments_author_id_fkey(full_name, avatar_url)')
+            .select('*')
             .eq('post_id', postId)
             .eq('is_approved', true)
             .order('created_at', { ascending: true });
