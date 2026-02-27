@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Globe, Moon, Sun, ChevronDown } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Menu, X, Globe, Moon, Sun, ChevronDown, LogIn, UserPlus, LayoutDashboard } from 'lucide-react';
 import { COLORS } from '../utils/icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCountry } from '../contexts/CountryContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavLinks, useSiteSettings } from '../hooks/useContent';
 
 const Header: React.FC = () => {
@@ -13,6 +14,7 @@ const Header: React.FC = () => {
   const { t, language, setLanguage, isRTL } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { countries, selectedCountry, setCountry } = useCountry();
+  const { user, getDashboardPath } = useAuth();
   const { navLinks } = useNavLinks(selectedCountry?.id);
   const { get } = useSiteSettings(selectedCountry?.id);
 
@@ -138,17 +140,34 @@ const Header: React.FC = () => {
           </div>
         </nav>
 
-        {/* CTA Button */}
-        <div className="hidden md:block">
-          <a
-            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(bookMsg)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-2 rounded-lg font-bold transition transform hover:scale-105 text-[#0B3D2E]"
-            style={{ backgroundColor: COLORS.accent }}
-          >
-            {bookCta || (isRTL ? 'احجز استشارتك' : 'Book Consultation')}
-          </a>
+        {/* CTA + Auth Buttons */}
+        <div className="hidden md:flex items-center gap-3">
+          {user ? (
+            <Link
+              to={getDashboardPath()}
+              className="flex items-center gap-2 px-4 py-2 bg-[#0B3D2E] text-white rounded-lg font-bold hover:bg-[#0B3D2E]/80 transition transform hover:scale-105"
+            >
+              <LayoutDashboard size={16} />
+              {isRTL ? 'لوحة التحكم' : 'Dashboard'}
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="flex items-center gap-1 px-4 py-2 text-[#0B3D2E] dark:text-gray-200 font-semibold hover:text-[#C8A762] transition"
+              >
+                <LogIn size={16} />
+                {isRTL ? 'دخول' : 'Login'}
+              </Link>
+              <Link
+                to="/signup"
+                className="flex items-center gap-1 px-4 py-2 bg-[#0B3D2E] text-white rounded-lg font-bold hover:bg-[#0B3D2E]/80 transition transform hover:scale-105"
+              >
+                <UserPlus size={16} />
+                {isRTL ? 'تسجيل' : 'Sign Up'}
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}

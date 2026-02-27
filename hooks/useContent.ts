@@ -52,6 +52,11 @@ function useSupabaseQuery<T>(
         const { data: result, error: err } = await query;
 
         if (err) {
+            // Suppress AbortError from React StrictMode double-mount
+            if (err.message?.includes('AbortError') || err.code === 'PGRST116') {
+                setLoading(false);
+                return;
+            }
             setError(err.message);
             console.error(`Error fetching ${table}:`, err);
         } else {

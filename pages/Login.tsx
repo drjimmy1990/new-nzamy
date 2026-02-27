@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Lock, Mail, Loader } from 'lucide-react';
 
 const Login: React.FC = () => {
-    const { signIn } = useAuth();
+    const { signIn, profile, user, getDashboardPath } = useAuth();
     const { isRTL } = useLanguage();
     const navigate = useNavigate();
 
@@ -15,17 +15,27 @@ const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const t = (ar: string, en: string) => isRTL ? ar : en;
+
+    // If already logged in, redirect to dashboard
+    useEffect(() => {
+        if (user && profile) {
+            navigate(getDashboardPath(), { replace: true });
+        }
+    }, [user, profile]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
-        try {
-            await signIn(email, password);
-            navigate('/admin'); // Redirect to admin or home
-        } catch (err: any) {
-            setError(err.message || 'Login failed');
-        } finally {
+        const { error: signInError } = await signIn(email, password);
+
+        if (signInError) {
+            setError(signInError);
+            setLoading(false);
+        } else {
+            // Profile will load via AuthContext, then useEffect redirects
             setLoading(false);
         }
     };
@@ -35,17 +45,17 @@ const Login: React.FC = () => {
             <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                 <div className="text-center mb-8">
                     <h1 className="text-2xl font-bold text-[#0B3D2E] dark:text-white mb-2">
-                        {isRTL ? 'تسجيل الدخول' : 'Sign In'}
+                        {t('تسجيل الدخول', 'Sign In')}
                     </h1>
                     <p className="text-gray-500 text-sm">
-                        {isRTL ? 'مرحباً بعودتك! يرجى إدخال بياناتك' : 'Welcome back! Please enter your details'}
+                        {t('مرحباً بعودتك! يرجى إدخال بياناتك', 'Welcome back! Please enter your details')}
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                            {isRTL ? 'البريد الإلكتروني' : 'Email Address'}
+                            {t('البريد الإلكتروني', 'Email Address')}
                         </label>
                         <div className="relative">
                             <input
@@ -62,7 +72,7 @@ const Login: React.FC = () => {
 
                     <div>
                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                            {isRTL ? 'كلمة المرور' : 'Password'}
+                            {t('كلمة المرور', 'Password')}
                         </label>
                         <div className="relative">
                             <input
@@ -88,8 +98,15 @@ const Login: React.FC = () => {
                         disabled={loading}
                         className="w-full py-3 bg-[#0B3D2E] text-white font-bold rounded-lg hover:bg-[#0B3D2E]/90 transition shadow-lg shadow-[#0B3D2E]/20 flex justify-center items-center gap-2 disabled:opacity-50"
                     >
-                        {loading ? <Loader className="animate-spin" size={20} /> : (isRTL ? 'دخول' : 'Sign In')}
+                        {loading ? <Loader className="animate-spin" size={20} /> : t('دخول', 'Sign In')}
                     </button>
+
+                    <p className="text-center text-sm text-gray-500">
+                        {t('ليس لديك حساب؟', "Don't have an account?")}{' '}
+                        <Link to="/signup" className="text-[#C8A762] font-bold hover:underline">
+                            {t('إنشاء حساب جديد', 'Create Account')}
+                        </Link>
+                    </p>
                 </form>
             </div>
         </div>

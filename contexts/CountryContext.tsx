@@ -32,12 +32,14 @@ export const CountryProvider = ({ children }: { children: ReactNode }) => {
                 return;
             }
 
-            setCountries(data || []);
+            // Filter to only SA and EG
+            const filtered = (data || []).filter(c => c.code === 'SA' || c.code === 'EG');
+            setCountries(filtered);
 
-            // Restore from localStorage or use default
+            // Restore from localStorage or default to SA
             const savedCode = localStorage.getItem(STORAGE_KEY);
-            const saved = data?.find(c => c.code === savedCode);
-            const defaultCountry = data?.find(c => c.is_default) || data?.[0];
+            const saved = filtered.find(c => c.code === savedCode);
+            const defaultCountry = filtered.find(c => c.code === 'SA') || filtered[0];
             setSelectedCountry(saved || defaultCountry || null);
             setLoading(false);
         };

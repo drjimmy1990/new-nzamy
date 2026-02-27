@@ -23,8 +23,28 @@ import PageRenderer from './pages/PageRenderer';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 
-const Layout = () => (
+// Dashboard
+import RequireAuth from './components/auth/RequireAuth';
+import DashboardLayout from './components/dashboard/DashboardLayout';
+
+// Seeker Dashboards
+import IndividualDashboard from './pages/dashboard/seeker/IndividualDashboard';
+import CompanyDashboard from './pages/dashboard/seeker/CompanyDashboard';
+import GovernmentDashboard from './pages/dashboard/seeker/GovernmentDashboard';
+import NgoDashboard from './pages/dashboard/seeker/NgoDashboard';
+
+// Provider Dashboards
+import LawFirmDashboard from './pages/dashboard/provider/LawFirmDashboard';
+import LawyerDashboard from './pages/dashboard/provider/LawyerDashboard';
+import TraineeDashboard from './pages/dashboard/provider/TraineeDashboard';
+import NotaryDashboard from './pages/dashboard/provider/NotaryDashboard';
+import MarriageDashboard from './pages/dashboard/provider/MarriageDashboard';
+import ArbitratorDashboard from './pages/dashboard/provider/ArbitratorDashboard';
+
+// Public Layout with Header + Footer
+const PublicLayout = () => (
   <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
     <Header />
     <Outlet />
@@ -52,17 +72,34 @@ const App: React.FC = () => {
           <CountryProvider>
             <LanguageProvider>
               <Routes>
-                <Route element={<Layout />}>
+                {/* ── Public Routes (with Header + Footer) ── */}
+                <Route element={<PublicLayout />}>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/team/:slug" element={<TeamMemberPage />} />
-
-                  {/* Public Content Pages */}
                   <Route path="/blog" element={<BlogList />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/page/:slug" element={<PageRenderer />} />
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                </Route>
+
+                {/* ── Dashboard Routes (authenticated, no Header/Footer) ── */}
+                <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
+                  {/* Seeker Dashboards */}
+                  <Route path="/dashboard/seeker/individual/*" element={<IndividualDashboard />} />
+                  <Route path="/dashboard/seeker/company/*" element={<CompanyDashboard />} />
+                  <Route path="/dashboard/seeker/government/*" element={<GovernmentDashboard />} />
+                  <Route path="/dashboard/seeker/ngo/*" element={<NgoDashboard />} />
+
+                  {/* Provider Dashboards */}
+                  <Route path="/dashboard/provider/law_firm/*" element={<LawFirmDashboard />} />
+                  <Route path="/dashboard/provider/independent_lawyer/*" element={<LawyerDashboard />} />
+                  <Route path="/dashboard/provider/trainee_lawyer/*" element={<TraineeDashboard />} />
+                  <Route path="/dashboard/provider/notary/*" element={<NotaryDashboard />} />
+                  <Route path="/dashboard/provider/marriage_official/*" element={<MarriageDashboard />} />
+                  <Route path="/dashboard/provider/arbitrator/*" element={<ArbitratorDashboard />} />
                 </Route>
               </Routes>
             </LanguageProvider>

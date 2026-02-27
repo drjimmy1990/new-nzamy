@@ -1,0 +1,41 @@
+step 0 ⚡ Run updated SQL
+Run schema-part4-rls.sql in Supabase SQL Editor. This fixes the RLS policies.
+
+Test 1: Homepage & Public Pages
+Go to http://localhost:3000 → see the full landing page
+Go to /blog, /faq, /contact → should all render with content
+Test 2: Signup (Individual Seeker)
+Go to /signup
+Pick 🇸🇦 Saudi Arabia → I need legal services → Individual → enter name, email, password
+Check email → confirm → check Supabase profiles table: should have account_cat=seeker, s_type=individual
+Test 3: Login & Individual Dashboard
+Go to /login → sign in with the Individual account
+Should redirect to /dashboard/seeker/individual
+You should see:
+✅ Green sidebar with 5 menu items (Dashboard, AI Chat, Browse, My Cases, Wallet)
+✅ Welcome message with your name
+✅ Quick action cards (Consultation, Contract Review, Find Lawyer, Track Cases)
+✅ Stats showing 0s
+✅ "Create New Request" button
+Test 4: Create a Service Request
+Click "إنشاء طلب جديد" (or the Consultation quick action)
+Pick a category, enter title like "Need help with employment contract"
+Click Submit Request
+The request should appear below in "My Cases" with a timeline tracker
+Test 5: Signup (Independent Lawyer)
+Sign out → go to /signup with a different email
+Pick 🇸🇦 Saudi Arabia → I provide legal services → Independent Lawyer → enter details
+Confirm email → check profiles table: account_cat=provider, p_type=independent_lawyer
+Test 6: Lawyer Dashboard
+Login as the Lawyer → should redirect to /dashboard/provider/independent_lawyer
+You should see:
+✅ Green sidebar with 7 menu items
+✅ Tabbed layout (Overview / Inbox / Board / Community)
+✅ Profile card on the right
+✅ In the Inbox tab: the request from Test 4 should appear under "Available Pool Requests"
+Click ✅ to accept it → it moves to "My Requests"
+Switch to Board tab → see it in the "In Progress" column
+Test 7: Language & Dark Mode
+Click 🌐 in the topbar → UI switches between Arabic/English
+Click 🌙 → dark mode toggle
+Click the sign out button (🚪) → returns to homepage

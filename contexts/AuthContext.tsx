@@ -1,17 +1,36 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import * as React from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { Profile } from '../types/database';
+import { Profile, AccountCategory, SeekerType, ProviderType } from '../types/database';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
     user: User | null;
     profile: Profile | null;
     session: Session | null;
-    isAdmin: boolean;
     isLoading: boolean;
+    // Legacy
+    isAdmin: boolean;
+    // RBAC helpers
+    isSeeker: boolean;
+    isProvider: boolean;
+    accountType: AccountCategory | null;
+    seekerType: SeekerType | null;
+    providerType: ProviderType | null;
+    isVerified: boolean;
+    // Auth actions
     signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-    signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
+    signUp: (
+        email: string,
+        password: string,
+        fullName: string,
+        countryId: string,
+        accountCat: AccountCategory,
+        subType: SeekerType | ProviderType
+    ) => Promise<{ error: string | null }>;
     signOut: () => Promise<void>;
+    // Helper to get dashboard path
+    getDashboardPath: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,16 +47,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .select('*')
             .eq('id', userId)
             .single();
-        setProfile(data);
+        setProfile(data as Profile | null);
     };
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
-                fetchProfile(session.user.id);
+                await fetchProfile(session.user.id);
             }
             setIsLoading(false);
         });
@@ -63,18 +82,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: error?.message ?? null };
     };
 
-    const signUp = async (email: string, password: string, fullName: string) => {
-        const { error } = await supabase.auth.signUp({
+    const signUp = async (
+        email: string,
+        password: string,
+        fullName: string,
+        countryId: string,
+        accountCat: AccountCategory,
+        subType: SeekerType | ProviderType
+    ) => {
+        // Step 1: Create auth user with just full_name (trigger only sets basic profile)
+        const { data: signUpData, error } = await supabase.auth.signUp({
             email,
             password,
             options: { data: { full_name: fullName } },
         });
-        return { error: error?.message ?? null };
+
+        if (error) return { error: error.message };
+
+        // Step 2: Use RPC to set RBAC fields (bypasses RLS via SECURITY DEFINER)
+        if (signUpData.user) {
+            const { error: rpcError } = await (supabase.rpc as any)('setup_user_role', {
+                user_id: signUpData.user.id,
+                p_country_id: countryId,
+                p_account_cat: accountCat,
+                p_s_type: accountCat === 'seeker' ? subType : null,
+                p_p_type: accountCat === 'provider' ? subType : null,
+            });
+
+            if (rpcError) {
+                console.error('RPC setup_user_role error:', rpcError);
+                return { error: rpcError.message };
+            }
+        }
+
+        return { error: null };
     };
 
     const signOut = async () => {
         await supabase.auth.signOut();
         setProfile(null);
+    };
+
+    const getDashboardPath = (): string => {
+        if (!profile) return '/login';
+        if (profile.role === 'admin') return '/admin';
+        if (profile.account_cat === 'provider' && profile.p_type) {
+            return `/dashboard/provider/${profile.p_type}`;
+        }
+        if (profile.account_cat === 'seeker' && profile.s_type) {
+            return `/dashboard/seeker/${profile.s_type}`;
+        }
+        return '/';
     };
 
     return (
@@ -83,11 +141,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 user,
                 profile,
                 session,
-                isAdmin: profile?.role === 'admin',
                 isLoading,
+                isAdmin: profile?.role === 'admin',
+                isSeeker: profile?.account_cat === 'seeker',
+                isProvider: profile?.account_cat === 'provider',
+                accountType: profile?.account_cat ?? null,
+                seekerType: profile?.s_type ?? null,
+                providerType: profile?.p_type ?? null,
+                isVerified: profile?.is_verified ?? false,
                 signIn,
                 signUp,
                 signOut,
+                getDashboardPath,
             }}
         >
             {children}

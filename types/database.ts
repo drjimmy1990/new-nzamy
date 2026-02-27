@@ -1,10 +1,18 @@
 // =============================================
-// Database Types — matches schema.sql v2
+// Database Types — matches schema.sql v2 + schema-part2 RBAC
 // =============================================
 
 export type Language = 'ar' | 'en';
 export type ServiceCategory = 'personal' | 'company';
 export type UserRole = 'admin' | 'user';
+
+// ===== RBAC ENUMs from schema-part2 =====
+export type AccountCategory = 'seeker' | 'provider' | 'admin';
+export type SeekerType = 'individual' | 'company' | 'government' | 'ngo';
+export type ProviderType = 'law_firm' | 'independent_lawyer' | 'trainee_lawyer' | 'notary' | 'marriage_official' | 'arbitrator';
+export type ServiceCategoryV2 = 'consultation' | 'case_pleading' | 'contract_review' | 'notarization' | 'marriage' | 'arbitration' | 'other';
+export type RequestStatus = 'draft' | 'pending_match' | 'in_progress' | 'pending_approval' | 'completed' | 'cancelled';
+export type WorkspaceRole = 'owner' | 'admin' | 'member' | 'trainee';
 
 export interface Country {
     id: string;
@@ -26,6 +34,14 @@ export interface Profile {
     full_name: string | null;
     avatar_url: string | null;
     role: UserRole;
+    // RBAC fields from schema-part2
+    country_id: string | null;
+    account_cat: AccountCategory;
+    s_type: SeekerType | null;
+    p_type: ProviderType | null;
+    visibility_score: number;
+    is_verified: boolean;
+    specialty: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -282,3 +298,83 @@ export interface ChatMessage {
 export type BilingualField<T> = {
     [K in keyof T]: K extends `${string}_ar` | `${string}_en` ? T[K] : never;
 };
+
+// ===== NEW ENTITIES from schema-part2 =====
+
+export interface Workspace {
+    id: string;
+    country_id: string;
+    name: string;
+    type: AccountCategory;
+    owner_id: string;
+    commercial_record_number: string | null;
+    is_verified: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface WorkspaceMember {
+    id: string;
+    workspace_id: string;
+    user_id: string;
+    role: WorkspaceRole;
+    created_at: string;
+    // Joined
+    profile?: Profile;
+}
+
+export interface ServiceRequest {
+    id: string;
+    country_id: string;
+    seeker_id: string;
+    provider_id: string | null;
+    workspace_id: string | null;
+    category: ServiceCategoryV2;
+    status: RequestStatus;
+    title: string;
+    description: string | null;
+    metadata: Record<string, unknown>;
+    price: number | null;
+    created_at: string;
+    updated_at: string;
+    // Joined
+    seeker?: Profile;
+    provider?: Profile;
+}
+
+export interface DocumentRecord {
+    id: string;
+    request_id: string;
+    uploaded_by: string;
+    document_type: string;
+    file_url: string;
+    verification_status: 'pending' | 'verified' | 'rejected';
+    created_at: string;
+}
+
+export interface CommunityQuestion {
+    id: string;
+    country_id: string;
+    author_id: string | null;
+    title: string;
+    content: string;
+    category: string | null;
+    created_at: string;
+    updated_at: string;
+    // Joined
+    author?: Profile;
+    answers_count?: number;
+}
+
+export interface CommunityAnswer {
+    id: string;
+    question_id: string;
+    provider_id: string;
+    content: string;
+    upvotes: number;
+    is_endorsed: boolean;
+    created_at: string;
+    updated_at: string;
+    // Joined
+    provider?: Profile;
+}
