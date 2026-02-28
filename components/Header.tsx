@@ -222,15 +222,37 @@ const Header: React.FC = () => {
               {t(link.name_ar, link.name_en)}
             </a>
           ))}
-          <a
-            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(bookMsg)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-center px-6 py-3 rounded-lg font-bold text-[#0B3D2E]"
-            style={{ backgroundColor: COLORS.accent }}
-          >
-            {bookCta || (isRTL ? 'احجز استشارتك' : 'Book Consultation')}
-          </a>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-3 flex flex-col gap-2">
+            {user ? (
+              <Link
+                to={getDashboardPath()}
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-[#0B3D2E] text-white rounded-lg font-bold"
+              >
+                <LayoutDashboard size={16} />
+                {isRTL ? 'لوحة التحكم' : 'Dashboard'}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#0B3D2E] text-[#0B3D2E] dark:text-white dark:border-white rounded-lg font-bold"
+                >
+                  <LogIn size={16} />
+                  {isRTL ? 'دخول' : 'Login'}
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-[#0B3D2E] text-white rounded-lg font-bold"
+                >
+                  <UserPlus size={16} />
+                  {isRTL ? 'تسجيل' : 'Sign Up'}
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       )}
     </header>
