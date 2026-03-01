@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Suspense } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -14,45 +15,56 @@ import { CountryProvider } from './contexts/CountryContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
-import TeamMemberPage from './components/TeamMemberPage';
 
-// Pages
-import BlogList from './pages/BlogList';
-import BlogPost from './pages/BlogPost';
-import PageRenderer from './pages/PageRenderer';
-import FAQ from './pages/FAQ';
-import Contact from './pages/Contact';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
+// Lazy-loaded pages (code-splitting)
+const TeamMemberPage = React.lazy(() => import('./components/TeamMemberPage'));
+const BlogList = React.lazy(() => import('./pages/BlogList'));
+const BlogPost = React.lazy(() => import('./pages/BlogPost'));
+const PageRenderer = React.lazy(() => import('./pages/PageRenderer'));
+const FAQ = React.lazy(() => import('./pages/FAQ'));
+const Contact = React.lazy(() => import('./pages/Contact'));
+const Login = React.lazy(() => import('./pages/Login'));
+const Signup = React.lazy(() => import('./pages/Signup'));
+const Community = React.lazy(() => import('./pages/Community'));
 
 // Dashboard
 import RequireAuth from './components/auth/RequireAuth';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 
-// Seeker Dashboards
-import IndividualDashboard from './pages/dashboard/seeker/IndividualDashboard';
-import CompanyDashboard from './pages/dashboard/seeker/CompanyDashboard';
-import GovernmentDashboard from './pages/dashboard/seeker/GovernmentDashboard';
-import NgoDashboard from './pages/dashboard/seeker/NgoDashboard';
+// Lazy-loaded dashboards
+const IndividualDashboard = React.lazy(() => import('./pages/dashboard/seeker/IndividualDashboard'));
+const CompanyDashboard = React.lazy(() => import('./pages/dashboard/seeker/CompanyDashboard'));
+const GovernmentDashboard = React.lazy(() => import('./pages/dashboard/seeker/GovernmentDashboard'));
+const NgoDashboard = React.lazy(() => import('./pages/dashboard/seeker/NgoDashboard'));
+const LawFirmDashboard = React.lazy(() => import('./pages/dashboard/provider/LawFirmDashboard'));
+const LawyerDashboard = React.lazy(() => import('./pages/dashboard/provider/LawyerDashboard'));
+const TraineeDashboard = React.lazy(() => import('./pages/dashboard/provider/TraineeDashboard'));
+const NotaryDashboard = React.lazy(() => import('./pages/dashboard/provider/NotaryDashboard'));
+const MarriageDashboard = React.lazy(() => import('./pages/dashboard/provider/MarriageDashboard'));
+const ArbitratorDashboard = React.lazy(() => import('./pages/dashboard/provider/ArbitratorDashboard'));
 
-// Provider Dashboards
-import LawFirmDashboard from './pages/dashboard/provider/LawFirmDashboard';
-import LawyerDashboard from './pages/dashboard/provider/LawyerDashboard';
-import TraineeDashboard from './pages/dashboard/provider/TraineeDashboard';
-import NotaryDashboard from './pages/dashboard/provider/NotaryDashboard';
-import MarriageDashboard from './pages/dashboard/provider/MarriageDashboard';
-import ArbitratorDashboard from './pages/dashboard/provider/ArbitratorDashboard';
+// Loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="w-8 h-8 border-4 border-[#C8A762] border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 // Public Layout with Header + Footer
 const PublicLayout = () => (
   <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
     <Header />
-    <Outlet />
+    <main>
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
+    </main>
     <Footer />
     <FloatingActions />
   </div>
 );
 
+// Home Page
 const HomePage = () => (
   <>
     <Hero />
@@ -64,13 +76,13 @@ const HomePage = () => (
   </>
 );
 
-const App: React.FC = () => {
+function App() {
   return (
-    <Router>
+    <LanguageProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <CountryProvider>
-            <LanguageProvider>
+        <CountryProvider>
+          <AuthProvider>
+            <Router>
               <Routes>
                 {/* ── Public Routes (with Header + Footer) ── */}
                 <Route element={<PublicLayout />}>
@@ -83,31 +95,32 @@ const App: React.FC = () => {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/community" element={<Community />} />
                 </Route>
 
                 {/* ── Dashboard Routes (authenticated, no Header/Footer) ── */}
                 <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
                   {/* Seeker Dashboards */}
-                  <Route path="/dashboard/seeker/individual/*" element={<IndividualDashboard />} />
-                  <Route path="/dashboard/seeker/company/*" element={<CompanyDashboard />} />
-                  <Route path="/dashboard/seeker/government/*" element={<GovernmentDashboard />} />
-                  <Route path="/dashboard/seeker/ngo/*" element={<NgoDashboard />} />
+                  <Route path="/dashboard/individual" element={<Suspense fallback={<PageLoader />}><IndividualDashboard /></Suspense>} />
+                  <Route path="/dashboard/company" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
+                  <Route path="/dashboard/government" element={<Suspense fallback={<PageLoader />}><GovernmentDashboard /></Suspense>} />
+                  <Route path="/dashboard/ngo" element={<Suspense fallback={<PageLoader />}><NgoDashboard /></Suspense>} />
 
                   {/* Provider Dashboards */}
-                  <Route path="/dashboard/provider/law_firm/*" element={<LawFirmDashboard />} />
-                  <Route path="/dashboard/provider/independent_lawyer/*" element={<LawyerDashboard />} />
-                  <Route path="/dashboard/provider/trainee_lawyer/*" element={<TraineeDashboard />} />
-                  <Route path="/dashboard/provider/notary/*" element={<NotaryDashboard />} />
-                  <Route path="/dashboard/provider/marriage_official/*" element={<MarriageDashboard />} />
-                  <Route path="/dashboard/provider/arbitrator/*" element={<ArbitratorDashboard />} />
+                  <Route path="/dashboard/lawyer" element={<Suspense fallback={<PageLoader />}><LawyerDashboard /></Suspense>} />
+                  <Route path="/dashboard/law_firm" element={<Suspense fallback={<PageLoader />}><LawFirmDashboard /></Suspense>} />
+                  <Route path="/dashboard/trainee" element={<Suspense fallback={<PageLoader />}><TraineeDashboard /></Suspense>} />
+                  <Route path="/dashboard/notary" element={<Suspense fallback={<PageLoader />}><NotaryDashboard /></Suspense>} />
+                  <Route path="/dashboard/marriage_officer" element={<Suspense fallback={<PageLoader />}><MarriageDashboard /></Suspense>} />
+                  <Route path="/dashboard/arbitrator" element={<Suspense fallback={<PageLoader />}><ArbitratorDashboard /></Suspense>} />
                 </Route>
               </Routes>
-            </LanguageProvider>
-          </CountryProvider>
-        </AuthProvider>
+            </Router>
+          </AuthProvider>
+        </CountryProvider>
       </ThemeProvider>
-    </Router>
+    </LanguageProvider>
   );
-};
+}
 
 export default App;

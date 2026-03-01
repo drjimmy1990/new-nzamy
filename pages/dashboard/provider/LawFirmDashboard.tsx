@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useProviderRequests, usePoolRequests, useUpdateRequestStatus } from '../../../hooks/useServiceRequests';
@@ -10,13 +10,14 @@ import KanbanBoardWidget from '../../../components/widgets/KanbanBoardWidget';
 import ProfileCardWidget from '../../../components/widgets/ProfileCardWidget';
 import { Inbox, Kanban, Users, BarChart3, MessageSquare, DollarSign } from 'lucide-react';
 
-type Tab = 'overview' | 'inbox' | 'workflow' | 'team';
+type Tab = 'overview' | 'inbox' | 'workflow' | 'team' | 'analytics' | 'community' | 'wallet';
 
 const LawFirmDashboard: React.FC = () => {
     const { profile } = useAuth();
     const { isRTL } = useLanguage();
     const t = (ar: string, en: string) => isRTL ? ar : en;
-    const [activeTab, setActiveTab] = useState<Tab>('overview');
+    const [searchParams] = useSearchParams();
+    const activeTab = (searchParams.get('tab') || 'overview') as Tab;
 
     const { requests: myRequests, loading: myLoading, refetch: refetchMy } = useProviderRequests(profile?.id);
     const { requests: poolRequests, loading: poolLoading, refetch: refetchPool } = usePoolRequests(profile?.country_id || undefined);
@@ -45,27 +46,6 @@ const LawFirmDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-                {tabs.map(tab => {
-                    const Icon = tab.icon;
-                    const active = activeTab === tab.key;
-                    return (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition ${active
-                                ? 'bg-[#0B3D2E] text-white shadow-lg'
-                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                                }`}
-                        >
-                            <Icon size={16} />
-                            {isRTL ? tab.label_ar : tab.label_en}
-                        </button>
-                    );
-                })}
-            </div>
-
             {activeTab === 'overview' && (
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -109,6 +89,30 @@ const LawFirmDashboard: React.FC = () => {
                     <Users className="mx-auto text-[#C8A762] mb-3" size={40} />
                     <h3 className="font-bold text-gray-700 dark:text-white">{t('إدارة الفريق', 'Team Management')}</h3>
                     <p className="text-gray-500 text-sm mt-1">{t('قريباً — إضافة محامين ومتدربين', 'Coming soon — Add lawyers and trainees')}</p>
+                </div>
+            )}
+
+            {activeTab === 'analytics' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <BarChart3 className="mx-auto text-[#C8A762] mb-3" size={40} />
+                    <h3 className="font-bold text-gray-700 dark:text-white">{t('التحليلات', 'Analytics')}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{t('قريباً — تحليل أداء الشركة', 'Coming soon — Firm performance analytics')}</p>
+                </div>
+            )}
+
+            {activeTab === 'community' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <MessageSquare className="mx-auto text-[#C8A762] mb-3" size={40} />
+                    <h3 className="font-bold text-gray-700 dark:text-white">{t('المجتمع القانوني', 'Legal Community')}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{t('قريباً — أسئلة وأجوبة المجتمع', 'Coming soon — Community Q&A')}</p>
+                </div>
+            )}
+
+            {activeTab === 'wallet' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <DollarSign className="mx-auto text-[#C8A762] mb-3" size={40} />
+                    <h3 className="font-bold text-gray-700 dark:text-white">{t('المحفظة', 'Wallet')}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{t('قريباً — الأرباح والمدفوعات', 'Coming soon — Earnings & payments')}</p>
                 </div>
             )}
         </div>

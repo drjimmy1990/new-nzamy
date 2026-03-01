@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useMyRequests, useCreateRequest } from '../../../hooks/useServiceRequests';
@@ -23,6 +24,8 @@ const IndividualDashboard: React.FC = () => {
     const { profile } = useAuth();
     const { isRTL } = useLanguage();
     const t = (ar: string, en: string) => isRTL ? ar : en;
+    const [searchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || '';
 
     const { requests, loading: requestsLoading, refetch } = useMyRequests(profile?.id);
     const { create, loading: creating } = useCreateRequest();
@@ -69,72 +72,118 @@ const IndividualDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Welcome */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                    {t('مرحباً', 'Welcome')}, {profile?.full_name} 👋
-                </h1>
-                <p className="text-gray-500 mt-1">{t('ماذا تحتاج اليوم؟', 'What do you need today?')}</p>
-            </div>
+            {/* Overview / Home */}
+            {activeTab === '' && (<>
+                {/* Welcome */}
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                        {t('مرحباً', 'Welcome')}, {profile?.full_name} 👋
+                    </h1>
+                    <p className="text-gray-500 mt-1">{t('ماذا تحتاج اليوم؟', 'What do you need today?')}</p>
+                </div>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {quickActions.map((action, i) => {
-                    const Icon = action.icon;
-                    return (
-                        <button key={i} onClick={action.onClick} className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition text-center group">
-                            <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition`}>
-                                <Icon className="text-white" size={24} />
-                            </div>
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{action.label}</span>
-                        </button>
-                    );
-                })}
-            </div>
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {quickActions.map((action, i) => {
+                        const Icon = action.icon;
+                        return (
+                            <button key={i} onClick={action.onClick} className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition text-center group">
+                                <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition`}>
+                                    <Icon className="text-white" size={24} />
+                                </div>
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{action.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
 
-            {/* Stats */}
-            <StatsOverviewWidget stats={[
-                { label_ar: 'طلبات نشطة', label_en: 'Active', value: activeRequests.length, color: 'text-blue-600' },
-                { label_ar: 'مكتملة', label_en: 'Completed', value: completedRequests.length, color: 'text-green-600' },
-                { label_ar: 'في الانتظار', label_en: 'Pending', value: pendingRequests.length, color: 'text-amber-600' },
-                { label_ar: 'مجموع الطلبات', label_en: 'Total', value: requests.length, color: 'text-purple-600' },
-            ]} />
+                {/* Stats */}
+                <StatsOverviewWidget stats={[
+                    { label_ar: 'طلبات نشطة', label_en: 'Active', value: activeRequests.length, color: 'text-blue-600' },
+                    { label_ar: 'مكتملة', label_en: 'Completed', value: completedRequests.length, color: 'text-green-600' },
+                    { label_ar: 'في الانتظار', label_en: 'Pending', value: pendingRequests.length, color: 'text-amber-600' },
+                    { label_ar: 'مجموع الطلبات', label_en: 'Total', value: requests.length, color: 'text-purple-600' },
+                ]} />
 
-            {/* Create Request Button */}
-            <button
-                onClick={() => setShowModal(true)}
-                className="w-full py-4 border-2 border-dashed border-[#C8A762] rounded-xl text-[#C8A762] font-bold hover:bg-[#C8A762]/10 transition flex items-center justify-center gap-2"
-            >
-                <Plus size={20} /> {t('إنشاء طلب جديد', 'Create New Request')}
-            </button>
+                {/* Create Request Button */}
+                <button
+                    onClick={() => setShowModal(true)}
+                    className="w-full py-4 border-2 border-dashed border-[#C8A762] rounded-xl text-[#C8A762] font-bold hover:bg-[#C8A762]/10 transition flex items-center justify-center gap-2"
+                >
+                    <Plus size={20} /> {t('إنشاء طلب جديد', 'Create New Request')}
+                </button>
 
-            {/* My Cases */}
-            <div>
-                <h2 className="font-bold text-lg text-gray-800 dark:text-white mb-3">
-                    {t('قضاياي', 'My Cases')} ({requests.length})
-                </h2>
-                {requestsLoading ? (
-                    <div className="flex justify-center py-8"><Loader className="animate-spin text-[#C8A762]" size={30} /></div>
-                ) : requests.length === 0 ? (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-                        <FileText className="mx-auto text-gray-300 mb-3" size={40} />
-                        <p className="text-gray-500">{t('لا توجد طلبات بعد. أنشئ طلبك الأول!', 'No requests yet. Create your first one!')}</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {requests.map(req => (
-                            <CaseTimelineWidget key={req.id} request={req} />
-                        ))}
-                    </div>
-                )}
-            </div>
+                {/* My Cases */}
+                <div>
+                    <h2 className="font-bold text-lg text-gray-800 dark:text-white mb-3">
+                        {t('قضاياي', 'My Cases')} ({requests.length})
+                    </h2>
+                    {requestsLoading ? (
+                        <div className="flex justify-center py-8"><Loader className="animate-spin text-[#C8A762]" size={30} /></div>
+                    ) : requests.length === 0 ? (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                            <FileText className="mx-auto text-gray-300 mb-3" size={40} />
+                            <p className="text-gray-500">{t('لا توجد طلبات بعد. أنشئ طلبك الأول!', 'No requests yet. Create your first one!')}</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {requests.map(req => (
+                                <CaseTimelineWidget key={req.id} request={req} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </>)}
 
-            {/* AI Chat Placeholder */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-                <MessageSquare className="mx-auto text-[#C8A762] mb-3" size={40} />
-                <h3 className="font-bold text-gray-700 dark:text-white">{t('المستشار الذكي', 'AI Legal Advisor')}</h3>
-                <p className="text-gray-500 text-sm mt-1">{t('قريباً - سيتم ربطه مع n8n', 'Coming soon — will be connected to n8n')}</p>
-            </div>
+            {/* AI Chat Tab */}
+            {activeTab === 'chat' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <MessageSquare className="mx-auto text-[#C8A762] mb-3" size={48} />
+                    <h3 className="text-xl font-bold text-gray-700 dark:text-white">{t('المستشار الذكي', 'AI Legal Advisor')}</h3>
+                    <p className="text-gray-500 text-sm mt-2">{t('قريباً — اكتب مشكلتك بلغتك وسيساعدك الذكاء الاصطناعي', 'Coming soon — Describe your problem and AI will help')}</p>
+                </div>
+            )}
+
+            {/* Browse Lawyers Tab */}
+            {activeTab === 'browse' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <Search className="mx-auto text-[#C8A762] mb-3" size={48} />
+                    <h3 className="text-xl font-bold text-gray-700 dark:text-white">{t('تصفح المحامين', 'Browse Lawyers')}</h3>
+                    <p className="text-gray-500 text-sm mt-2">{t('قريباً — ابحث عن محامي حسب التخصص والتقييم', 'Coming soon — Search lawyers by specialty & rating')}</p>
+                </div>
+            )}
+
+            {/* Cases Tab */}
+            {activeTab === 'cases' && (
+                <div>
+                    <h2 className="font-bold text-lg text-gray-800 dark:text-white mb-3">
+                        {t('قضاياي', 'My Cases')} ({requests.length})
+                    </h2>
+                    {requestsLoading ? (
+                        <div className="flex justify-center py-8"><Loader className="animate-spin text-[#C8A762]" size={30} /></div>
+                    ) : requests.length === 0 ? (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                            <FileText className="mx-auto text-gray-300 mb-3" size={40} />
+                            <p className="text-gray-500">{t('لا توجد طلبات بعد', 'No requests yet')}</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {requests.map(req => (
+                                <CaseTimelineWidget key={req.id} request={req} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Wallet Tab */}
+            {activeTab === 'wallet' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <DollarSign className="mx-auto text-[#C8A762] mb-3" size={48} />
+                    <h3 className="text-xl font-bold text-gray-700 dark:text-white">{t('المحفظة', 'Wallet')}</h3>
+                    <p className="text-gray-500 text-sm mt-2">{t('قريباً — رصيد الاشتراك والمدفوعات', 'Coming soon — Subscription balance & payments')}</p>
+                </div>
+            )}
 
             {/* ── Create Request Modal ── */}
             {showModal && (
@@ -156,8 +205,8 @@ const IndividualDashboard: React.FC = () => {
                                         key={cat.value}
                                         onClick={() => setNewCategory(cat.value)}
                                         className={`p-3 rounded-xl border-2 text-center text-xs font-semibold transition ${newCategory === cat.value
-                                                ? 'border-[#C8A762] bg-[#C8A762]/10 text-[#C8A762]'
-                                                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#C8A762]/50'
+                                            ? 'border-[#C8A762] bg-[#C8A762]/10 text-[#C8A762]'
+                                            : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#C8A762]/50'
                                             }`}
                                     >
                                         <CatIcon size={18} className="mx-auto mb-1" />

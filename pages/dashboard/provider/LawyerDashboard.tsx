@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useProviderRequests, usePoolRequests, useUpdateRequestStatus } from '../../../hooks/useServiceRequests';
@@ -10,15 +10,16 @@ import OrderInboxWidget from '../../../components/widgets/OrderInboxWidget';
 import KanbanBoardWidget from '../../../components/widgets/KanbanBoardWidget';
 import CommunityRadarWidget from '../../../components/widgets/CommunityRadarWidget';
 import ProfileCardWidget from '../../../components/widgets/ProfileCardWidget';
-import { Inbox, Kanban, MessageSquare } from 'lucide-react';
+import { Inbox, Kanban, MessageSquare, Calendar, FileText, DollarSign } from 'lucide-react';
 
-type Tab = 'overview' | 'inbox' | 'board' | 'community';
+type Tab = 'overview' | 'inbox' | 'board' | 'community' | 'calendar' | 'templates' | 'wallet';
 
 const LawyerDashboard: React.FC = () => {
     const { profile } = useAuth();
     const { isRTL } = useLanguage();
     const t = (ar: string, en: string) => isRTL ? ar : en;
-    const [activeTab, setActiveTab] = useState<Tab>('overview');
+    const [searchParams] = useSearchParams();
+    const activeTab = (searchParams.get('tab') || 'overview') as Tab;
 
     const { requests: myRequests, loading: myLoading, refetch: refetchMy } = useProviderRequests(profile?.id);
     const { requests: poolRequests, loading: poolLoading, refetch: refetchPool } = usePoolRequests(profile?.country_id || undefined);
@@ -44,36 +45,10 @@ const LawyerDashboard: React.FC = () => {
         refetchMy();
     };
 
-    const tabs: { key: Tab; icon: React.ElementType; label_ar: string; label_en: string }[] = [
-        { key: 'overview', icon: Inbox, label_ar: 'نظرة عامة', label_en: 'Overview' },
-        { key: 'inbox', icon: Inbox, label_ar: 'الطلبات', label_en: 'Inbox' },
-        { key: 'board', icon: Kanban, label_ar: 'المهام', label_en: 'Board' },
-        { key: 'community', icon: MessageSquare, label_ar: 'المجتمع', label_en: 'Community' },
-    ];
+
 
     return (
         <div className="space-y-6">
-            {/* Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-                {tabs.map(tab => {
-                    const Icon = tab.icon;
-                    const active = activeTab === tab.key;
-                    return (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition ${active
-                                ? 'bg-[#0B3D2E] text-white shadow-lg'
-                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                                }`}
-                        >
-                            <Icon size={16} />
-                            {isRTL ? tab.label_ar : tab.label_en}
-                        </button>
-                    );
-                })}
-            </div>
-
             {/* Overview Tab */}
             {activeTab === 'overview' && (
                 <div className="space-y-6">
@@ -147,6 +122,33 @@ const LawyerDashboard: React.FC = () => {
                         loading={questionsLoading}
                         onAnswer={(id) => console.log('Answer', id)}
                     />
+                </div>
+            )}
+
+            {/* Calendar Tab */}
+            {activeTab === 'calendar' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <Calendar className="mx-auto text-[#C8A762] mb-3" size={40} />
+                    <h3 className="font-bold text-gray-700 dark:text-white">{t('التقويم', 'Calendar')}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{t('قريباً — مواعيد الاستشارات والجلسات', 'Coming soon — Consultation & session appointments')}</p>
+                </div>
+            )}
+
+            {/* Templates Tab */}
+            {activeTab === 'templates' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <FileText className="mx-auto text-[#C8A762] mb-3" size={40} />
+                    <h3 className="font-bold text-gray-700 dark:text-white">{t('القوالب الذكية', 'Smart Templates')}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{t('قريباً — نماذج للمذكرات والعقود', 'Coming soon — Memo & contract templates')}</p>
+                </div>
+            )}
+
+            {/* Wallet Tab */}
+            {activeTab === 'wallet' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                    <DollarSign className="mx-auto text-[#C8A762] mb-3" size={40} />
+                    <h3 className="font-bold text-gray-700 dark:text-white">{t('المحفظة', 'Wallet')}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{t('قريباً — الأرباح والمدفوعات', 'Coming soon — Earnings & payments')}</p>
                 </div>
             )}
         </div>

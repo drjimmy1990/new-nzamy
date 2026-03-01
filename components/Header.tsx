@@ -97,6 +97,13 @@ const Header: React.FC = () => {
                 {t(link.name_ar, link.name_en)}
               </a>
             ))}
+            <a
+              href="/community"
+              onClick={(e) => handleNavClick(e, '/community')}
+              className="font-medium text-[#0B3D2E] dark:text-gray-200 hover:text-[#C8A762] dark:hover:text-[#C8A762] transition-colors"
+            >
+              {isRTL ? 'المجتمع' : 'Community'}
+            </a>
           </div>
 
           {/* Country Selector */}
@@ -222,6 +229,13 @@ const Header: React.FC = () => {
               {t(link.name_ar, link.name_en)}
             </a>
           ))}
+          <a
+            href="/community"
+            onClick={(e) => handleNavClick(e, '/community')}
+            className="block font-medium p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-[#0B3D2E] dark:text-gray-200 transition-colors"
+          >
+            {isRTL ? 'المجتمع' : 'Community'}
+          </a>
           <div className="border-t border-gray-200 dark:border-gray-700 pt-3 flex flex-col gap-2">
             {user ? (
               <Link
