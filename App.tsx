@@ -101,18 +101,18 @@ function App() {
                 {/* ── Dashboard Routes (authenticated, no Header/Footer) ── */}
                 <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
                   {/* Seeker Dashboards */}
-                  <Route path="/dashboard/individual" element={<Suspense fallback={<PageLoader />}><IndividualDashboard /></Suspense>} />
-                  <Route path="/dashboard/company" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
-                  <Route path="/dashboard/government" element={<Suspense fallback={<PageLoader />}><GovernmentDashboard /></Suspense>} />
-                  <Route path="/dashboard/ngo" element={<Suspense fallback={<PageLoader />}><NgoDashboard /></Suspense>} />
+                  <Route path="/dashboard/seeker/individual" element={<Suspense fallback={<PageLoader />}><IndividualDashboard /></Suspense>} />
+                  <Route path="/dashboard/seeker/company" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
+                  <Route path="/dashboard/seeker/government" element={<Suspense fallback={<PageLoader />}><GovernmentDashboard /></Suspense>} />
+                  <Route path="/dashboard/seeker/ngo" element={<Suspense fallback={<PageLoader />}><NgoDashboard /></Suspense>} />
 
                   {/* Provider Dashboards */}
-                  <Route path="/dashboard/lawyer" element={<Suspense fallback={<PageLoader />}><LawyerDashboard /></Suspense>} />
-                  <Route path="/dashboard/law_firm" element={<Suspense fallback={<PageLoader />}><LawFirmDashboard /></Suspense>} />
-                  <Route path="/dashboard/trainee" element={<Suspense fallback={<PageLoader />}><TraineeDashboard /></Suspense>} />
-                  <Route path="/dashboard/notary" element={<Suspense fallback={<PageLoader />}><NotaryDashboard /></Suspense>} />
-                  <Route path="/dashboard/marriage_officer" element={<Suspense fallback={<PageLoader />}><MarriageDashboard /></Suspense>} />
-                  <Route path="/dashboard/arbitrator" element={<Suspense fallback={<PageLoader />}><ArbitratorDashboard /></Suspense>} />
+                  <Route path="/dashboard/provider/independent_lawyer" element={<Suspense fallback={<PageLoader />}><LawyerDashboard /></Suspense>} />
+                  <Route path="/dashboard/provider/law_firm" element={<Suspense fallback={<PageLoader />}><LawFirmDashboard /></Suspense>} />
+                  <Route path="/dashboard/provider/trainee_lawyer" element={<Suspense fallback={<PageLoader />}><TraineeDashboard /></Suspense>} />
+                  <Route path="/dashboard/provider/notary" element={<Suspense fallback={<PageLoader />}><NotaryDashboard /></Suspense>} />
+                  <Route path="/dashboard/provider/marriage_official" element={<Suspense fallback={<PageLoader />}><MarriageDashboard /></Suspense>} />
+                  <Route path="/dashboard/provider/arbitrator" element={<Suspense fallback={<PageLoader />}><ArbitratorDashboard /></Suspense>} />
                 </Route>
               </Routes>
             </Router>

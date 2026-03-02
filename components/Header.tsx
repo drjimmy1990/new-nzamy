@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Menu, X, Globe, Moon, Sun, ChevronDown, LogIn, UserPlus, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Globe, Moon, Sun, ChevronDown, LogIn, UserPlus, LayoutDashboard, LogOut } from 'lucide-react';
 import { COLORS } from '../utils/icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCountry } from '../contexts/CountryContext';
@@ -14,7 +14,7 @@ const Header: React.FC = () => {
   const { t, language, setLanguage, isRTL } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { countries, selectedCountry, setCountry } = useCountry();
-  const { user, getDashboardPath } = useAuth();
+  const { user, getDashboardPath, signOut } = useAuth();
   const { navLinks } = useNavLinks(selectedCountry?.id);
   const { get } = useSiteSettings(selectedCountry?.id);
 
@@ -150,13 +150,22 @@ const Header: React.FC = () => {
         {/* CTA + Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
           {user ? (
-            <Link
-              to={getDashboardPath()}
-              className="flex items-center gap-2 px-4 py-2 bg-[#0B3D2E] text-white rounded-lg font-bold hover:bg-[#0B3D2E]/80 transition transform hover:scale-105"
-            >
-              <LayoutDashboard size={16} />
-              {isRTL ? 'لوحة التحكم' : 'Dashboard'}
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => signOut()}
+                className="flex items-center gap-2 px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-bold transition"
+                title={isRTL ? 'تسجيل الخروج' : 'Logout'}
+              >
+                <LogOut size={16} />
+              </button>
+              <Link
+                to={getDashboardPath()}
+                className="flex items-center gap-2 px-4 py-2 bg-[#0B3D2E] text-white rounded-lg font-bold hover:bg-[#0B3D2E]/80 transition transform hover:scale-105"
+              >
+                <LayoutDashboard size={16} />
+                {isRTL ? 'لوحة التحكم' : 'Dashboard'}
+              </Link>
+            </div>
           ) : (
             <>
               <Link
@@ -238,14 +247,26 @@ const Header: React.FC = () => {
           </a>
           <div className="border-t border-gray-200 dark:border-gray-700 pt-3 flex flex-col gap-2">
             {user ? (
-              <Link
-                to={getDashboardPath()}
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-[#0B3D2E] text-white rounded-lg font-bold"
-              >
-                <LayoutDashboard size={16} />
-                {isRTL ? 'لوحة التحكم' : 'Dashboard'}
-              </Link>
+              <>
+                <Link
+                  to={getDashboardPath()}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-[#0B3D2E] text-white rounded-lg font-bold"
+                >
+                  <LayoutDashboard size={16} />
+                  {isRTL ? 'لوحة التحكم' : 'Dashboard'}
+                </Link>
+                <button
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg font-bold transition"
+                >
+                  <LogOut size={16} />
+                  {isRTL ? 'تسجيل الخروج' : 'Logout'}
+                </button>
+              </>
             ) : (
               <>
                 <Link

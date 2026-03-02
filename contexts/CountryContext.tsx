@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabasePublic as supabase } from '../services/supabaseClient';
 import { Country } from '../types/database';
 
 interface CountryContextType {
@@ -19,32 +19,44 @@ export const CountryProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let cancelled = false;
+
         const fetchCountries = async () => {
-            const { data, error } = await supabase
-                .from('countries')
-                .select('*')
-                .eq('is_active', true)
-                .order('display_order');
+            try {
+                const { data, error } = await supabase
+                    .from('countries')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('display_order');
 
-            if (error) {
-                console.error('Error fetching countries:', error);
+                if (cancelled) return;
+
+                if (error) {
+                    console.error('Error fetching countries:', error);
+                    setLoading(false);
+                    return;
+                }
+
+                // Filter to only SA and EG
+                const filtered = (data || []).filter(c => c.code === 'SA' || c.code === 'EG');
+                setCountries(filtered);
+
+                // Restore from localStorage or default to SA
+                const savedCode = localStorage.getItem(STORAGE_KEY);
+                const saved = filtered.find(c => c.code === savedCode);
+                const defaultCountry = filtered.find(c => c.code === 'SA') || filtered[0];
+                setSelectedCountry(saved || defaultCountry || null);
                 setLoading(false);
-                return;
+            } catch (err: any) {
+                if (cancelled || err?.name === 'AbortError') return;
+                console.error('Error fetching countries:', err);
+                setLoading(false);
             }
-
-            // Filter to only SA and EG
-            const filtered = (data || []).filter(c => c.code === 'SA' || c.code === 'EG');
-            setCountries(filtered);
-
-            // Restore from localStorage or default to SA
-            const savedCode = localStorage.getItem(STORAGE_KEY);
-            const saved = filtered.find(c => c.code === savedCode);
-            const defaultCountry = filtered.find(c => c.code === 'SA') || filtered[0];
-            setSelectedCountry(saved || defaultCountry || null);
-            setLoading(false);
         };
 
         fetchCountries();
+
+        return () => { cancelled = true; };
     }, []);
 
     const setCountry = (country: Country) => {

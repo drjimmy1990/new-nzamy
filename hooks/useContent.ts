@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabasePublic as supabase } from '../services/supabaseClient';
 import type {
     SiteSetting, HeroContent, Feature, Service, Stat,
     TeamMember, Testimonial, FaqItem, SocialLink, NavLink,
@@ -30,37 +30,43 @@ function useSupabaseQuery<T>(
         setLoading(true);
         setError(null);
 
-        let query = supabase.from(table).select('*');
+        try {
+            let query = supabase.from(table).select('*');
 
-        // Filter by country
-        if (countryId) {
-            query = query.eq('country_id', countryId);
-        }
-
-        // Apply additional filters
-        if (options?.filters) {
-            Object.entries(options.filters).forEach(([key, value]) => {
-                query = query.eq(key, value);
-            });
-        }
-
-        // Order
-        if (options?.orderBy) {
-            query = query.order(options.orderBy);
-        }
-
-        const { data: result, error: err } = await query;
-
-        if (err) {
-            // Suppress AbortError from React StrictMode double-mount
-            if (err.message?.includes('AbortError') || err.code === 'PGRST116') {
-                setLoading(false);
-                return;
+            // Filter by country
+            if (countryId) {
+                query = query.eq('country_id', countryId);
             }
-            setError(err.message);
+
+            // Apply additional filters
+            if (options?.filters) {
+                Object.entries(options.filters).forEach(([key, value]) => {
+                    query = query.eq(key, value);
+                });
+            }
+
+            // Order
+            if (options?.orderBy) {
+                query = query.order(options.orderBy);
+            }
+
+            const { data: result, error: err } = await query;
+
+            if (err) {
+                // Suppress AbortError from React StrictMode double-mount
+                if (err.message?.includes('AbortError') || err.code === 'PGRST116') {
+                    setLoading(false);
+                    return;
+                }
+                setError(err.message);
+                console.error(`Error fetching ${table}:`, err);
+            } else {
+                setData((result as T[]) || []);
+            }
+        } catch (err: any) {
+            if (err?.name === 'AbortError') return;
             console.error(`Error fetching ${table}:`, err);
-        } else {
-            setData((result as T[]) || []);
+            setError(err?.message || 'Unknown error');
         }
         setLoading(false);
     }, [table, countryId, enabled, options?.orderBy, JSON.stringify(options?.filters)]);

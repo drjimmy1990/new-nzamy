@@ -5,7 +5,7 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { useMyRequests } from '../../../hooks/useServiceRequests';
 import StatsOverviewWidget from '../../../components/widgets/StatsOverviewWidget';
 import CaseTimelineWidget from '../../../components/widgets/CaseTimelineWidget';
-import { Shield, Users, DollarSign, BookOpen, FileText, Calendar, CheckCircle } from 'lucide-react';
+import { Shield, Users, DollarSign, BookOpen, FileText, Calendar, CheckCircle, Loader } from 'lucide-react';
 
 type Tab = '' | 'compliance' | 'board' | 'grants';
 
@@ -30,7 +30,11 @@ const NgoDashboard: React.FC = () => {
                         { label_ar: 'مكتملة', label_en: 'Completed', value: completedCount, color: 'text-green-600' },
                         { label_ar: 'مستوى الامتثال', label_en: 'Compliance', value: '✓', color: 'text-green-600' },
                     ]} />
-                    <CaseTimelineWidget requests={requests.slice(0, 5)} loading={loading} />
+                    {loading ? (
+                        <div className="flex justify-center py-8"><Loader className="animate-spin text-[#C8A762]" size={28} /></div>
+                    ) : requests.slice(0, 5).map(r => (
+                        <CaseTimelineWidget key={r.id} request={r} />
+                    ))}
                 </div>
             )}
 

@@ -6,7 +6,7 @@ import {
     LayoutDashboard, MessageSquare, Search, FileText, Kanban,
     BarChart3, Users, Shield, MapPin, Calendar, BookOpen,
     Award, Inbox, PenTool, GraduationCap, Gavel,
-    Building2, Lock, DollarSign, X, Scale
+    Building2, Lock, DollarSign, X, Scale, LogOut
 } from 'lucide-react';
 
 interface MenuItem {
@@ -102,7 +102,7 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onClose }) => {
-    const { profile } = useAuth();
+    const { profile, signOut } = useAuth();
     const { isRTL } = useLanguage();
     const [searchParams] = useSearchParams();
     const currentTab = searchParams.get('tab') || '';
@@ -157,6 +157,17 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onClose }) => {
                     );
                 })}
             </nav>
+
+            {/* Logout Button */}
+            <div className="p-3">
+                <button
+                    onClick={() => signOut()}
+                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg font-bold transition-all"
+                >
+                    <LogOut size={18} />
+                    <span>{isRTL ? 'تسجيل الخروج' : 'Logout'}</span>
+                </button>
+            </div>
 
             {/* Footer */}
             <div className="p-4 border-t border-white/10 text-xs text-white/40 text-center">

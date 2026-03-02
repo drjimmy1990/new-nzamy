@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, supabasePublic } from '../services/supabaseClient';
 import { Profile, AccountCategory, SeekerType, ProviderType } from '../types/database';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -42,12 +42,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchProfile = async (userId: string) => {
-        const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
-        setProfile(data as Profile | null);
+        try {
+            // Try authenticated client first
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (data) {
+                setProfile(data as Profile);
+                return;
+            }
+
+            // Fallback to public client if RLS blocks authenticated reads
+            if (error) {
+                console.warn('Auth profile fetch failed, trying public client:', error.message);
+                const { data: pubData } = await supabasePublic
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                setProfile((pubData as Profile) || null);
+            }
+        } catch (err) {
+            console.error('Unhandled error in fetchProfile:', err);
+            setProfile(null);
+        }
     };
 
     useEffect(() => {

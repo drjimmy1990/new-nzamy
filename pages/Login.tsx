@@ -17,10 +17,10 @@ const Login: React.FC = () => {
 
     const t = (ar: string, en: string) => isRTL ? ar : en;
 
-    // If already logged in, redirect to dashboard
+    // If already logged in, redirect to homepage
     useEffect(() => {
         if (user && profile) {
-            navigate(getDashboardPath(), { replace: true });
+            navigate('/', { replace: true });
         }
     }, [user, profile]);
 
