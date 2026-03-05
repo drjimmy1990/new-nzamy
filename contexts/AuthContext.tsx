@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchProfile = async (userId: string) => {
+    const fetchProfile = async (userId: string, retryCount = 0): Promise<void> => {
         try {
             // Try authenticated client first
             const { data, error } = await supabase
@@ -63,8 +63,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     .select('*')
                     .eq('id', userId)
                     .single();
-                setProfile((pubData as Profile) || null);
+
+                if (pubData) {
+                    setProfile(pubData as Profile);
+                    return;
+                }
             }
+
+            // If both failed and we haven't retried yet, wait and try once more
+            // (handles race condition where trigger hasn't created the profile yet)
+            if (retryCount < 2) {
+                console.warn(`[AuthContext] Profile not found, retrying in 500ms (attempt ${retryCount + 1})...`);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return fetchProfile(userId, retryCount + 1);
+            }
+
+            console.warn('[AuthContext] Profile not found after retries, setting null');
+            setProfile(null);
         } catch (err) {
             console.error('Unhandled error in fetchProfile:', err);
             setProfile(null);
@@ -73,18 +88,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                await fetchProfile(session.user.id);
+        supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+            if (error || !session) {
+                // Stale/invalid session — clear everything
+                setSession(null);
+                setUser(null);
+                setProfile(null);
+                setIsLoading(false);
+                return;
             }
+            setSession(session);
+            setUser(session.user);
+            await fetchProfile(session.user.id);
             setIsLoading(false);
         });
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
+            async (event, session) => {
+                // Handle token refresh failure or explicit sign out
+                if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+                    setSession(null);
+                    setUser(null);
+                    setProfile(null);
+                    return;
+                }
+
                 setSession(session);
                 setUser(session?.user ?? null);
                 if (session?.user) {
@@ -133,6 +162,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (rpcError) {
                 console.error('RPC setup_user_role error:', rpcError);
                 return { error: rpcError.message };
+            }
+
+            // Step 3: Auto-create workspace for Company or Law Firm
+            const needsWorkspace =
+                (accountCat === 'seeker' && subType === 'company') ||
+                (accountCat === 'provider' && subType === 'law_firm');
+
+            if (needsWorkspace) {
+                const wsType = subType === 'company' ? 'company' : 'law_firm';
+                const { data: ws } = await supabase
+                    .from('workspaces')
+                    .insert({
+                        name: `${fullName} Workspace`,
+                        country_id: countryId,
+                        owner_id: signUpData.user.id,
+                        type: wsType,
+                    })
+                    .select('id')
+                    .single();
+
+                // Add the owner as a workspace member
+                if (ws) {
+                    await supabase
+                        .from('workspace_members')
+                        .insert({
+                            workspace_id: ws.id,
+                            user_id: signUpData.user.id,
+                            role: 'owner',
+                        });
+                }
             }
         }
 

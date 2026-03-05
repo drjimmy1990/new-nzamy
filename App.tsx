@@ -29,6 +29,7 @@ const Community = React.lazy(() => import('./pages/Community'));
 
 // Dashboard
 import RequireAuth from './components/auth/RequireAuth';
+import RequireRole from './components/auth/RequireRole';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 
 // Lazy-loaded dashboards
@@ -98,21 +99,21 @@ function App() {
                   <Route path="/community" element={<Community />} />
                 </Route>
 
-                {/* ── Dashboard Routes (authenticated, no Header/Footer) ── */}
+                {/* ── Dashboard Routes (authenticated, role-guarded) ── */}
                 <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
                   {/* Seeker Dashboards */}
-                  <Route path="/dashboard/seeker/individual" element={<Suspense fallback={<PageLoader />}><IndividualDashboard /></Suspense>} />
-                  <Route path="/dashboard/seeker/company" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
-                  <Route path="/dashboard/seeker/government" element={<Suspense fallback={<PageLoader />}><GovernmentDashboard /></Suspense>} />
-                  <Route path="/dashboard/seeker/ngo" element={<Suspense fallback={<PageLoader />}><NgoDashboard /></Suspense>} />
+                  <Route path="/dashboard/seeker/individual" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['seeker']} allowedTypes={['individual']}><IndividualDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/seeker/company" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['seeker']} allowedTypes={['company']}><CompanyDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/seeker/government" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['seeker']} allowedTypes={['government']}><GovernmentDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/seeker/ngo" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['seeker']} allowedTypes={['ngo']}><NgoDashboard /></RequireRole></Suspense>} />
 
                   {/* Provider Dashboards */}
-                  <Route path="/dashboard/provider/independent_lawyer" element={<Suspense fallback={<PageLoader />}><LawyerDashboard /></Suspense>} />
-                  <Route path="/dashboard/provider/law_firm" element={<Suspense fallback={<PageLoader />}><LawFirmDashboard /></Suspense>} />
-                  <Route path="/dashboard/provider/trainee_lawyer" element={<Suspense fallback={<PageLoader />}><TraineeDashboard /></Suspense>} />
-                  <Route path="/dashboard/provider/notary" element={<Suspense fallback={<PageLoader />}><NotaryDashboard /></Suspense>} />
-                  <Route path="/dashboard/provider/marriage_official" element={<Suspense fallback={<PageLoader />}><MarriageDashboard /></Suspense>} />
-                  <Route path="/dashboard/provider/arbitrator" element={<Suspense fallback={<PageLoader />}><ArbitratorDashboard /></Suspense>} />
+                  <Route path="/dashboard/provider/independent_lawyer" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['provider']} allowedTypes={['independent_lawyer']}><LawyerDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/provider/law_firm" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['provider']} allowedTypes={['law_firm']}><LawFirmDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/provider/trainee_lawyer" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['provider']} allowedTypes={['trainee_lawyer']}><TraineeDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/provider/notary" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['provider']} allowedTypes={['notary']}><NotaryDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/provider/marriage_official" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['provider']} allowedTypes={['marriage_official']}><MarriageDashboard /></RequireRole></Suspense>} />
+                  <Route path="/dashboard/provider/arbitrator" element={<Suspense fallback={<PageLoader />}><RequireRole allowedCats={['provider']} allowedTypes={['arbitrator']}><ArbitratorDashboard /></RequireRole></Suspense>} />
                 </Route>
               </Routes>
             </Router>

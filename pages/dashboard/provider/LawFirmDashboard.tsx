@@ -3,11 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useProviderRequests, usePoolRequests, useUpdateRequestStatus } from '../../../hooks/useServiceRequests';
+import { useWorkspaceMembers } from '../../../hooks/useWorkspace';
 import { supabase } from '../../../services/supabaseClient';
 import StatsOverviewWidget from '../../../components/widgets/StatsOverviewWidget';
 import OrderInboxWidget from '../../../components/widgets/OrderInboxWidget';
 import KanbanBoardWidget from '../../../components/widgets/KanbanBoardWidget';
 import ProfileCardWidget from '../../../components/widgets/ProfileCardWidget';
+import TeamManagementWidget from '../../../components/widgets/TeamManagementWidget';
 import { Inbox, Kanban, Users, BarChart3, MessageSquare, DollarSign } from 'lucide-react';
 
 type Tab = 'overview' | 'inbox' | 'workflow' | 'team' | 'analytics' | 'community' | 'wallet';
@@ -22,6 +24,22 @@ const LawFirmDashboard: React.FC = () => {
     const { requests: myRequests, loading: myLoading, refetch: refetchMy } = useProviderRequests(profile?.id);
     const { requests: poolRequests, loading: poolLoading, refetch: refetchPool } = usePoolRequests(profile?.country_id || undefined);
     const { update: updateStatus } = useUpdateRequestStatus();
+
+    // Fetch firm workspace
+    const [workspaceId, setWorkspaceId] = React.useState<string | undefined>();
+    React.useEffect(() => {
+        if (!profile?.id) return;
+        supabase
+            .from('workspaces')
+            .select('id')
+            .eq('owner_id', profile.id)
+            .limit(1)
+            .then(({ data, error }) => {
+                if (data && data.length > 0) setWorkspaceId(data[0].id);
+                if (error) console.warn('Workspace fetch skipped:', error.message);
+            });
+    }, [profile?.id]);
+    const { members, loading: membersLoading, refetch: refetchMembers } = useWorkspaceMembers(workspaceId);
 
     const inProgressCount = myRequests.filter(r => r.status === 'in_progress').length;
     const completedCount = myRequests.filter(r => r.status === 'completed').length;
@@ -85,11 +103,12 @@ const LawFirmDashboard: React.FC = () => {
             )}
 
             {activeTab === 'team' && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-                    <Users className="mx-auto text-[#C8A762] mb-3" size={40} />
-                    <h3 className="font-bold text-gray-700 dark:text-white">{t('إدارة الفريق', 'Team Management')}</h3>
-                    <p className="text-gray-500 text-sm mt-1">{t('قريباً — إضافة محامين ومتدربين', 'Coming soon — Add lawyers and trainees')}</p>
-                </div>
+                <TeamManagementWidget
+                    workspaceId={workspaceId}
+                    members={members}
+                    loading={membersLoading}
+                    refetch={refetchMembers}
+                />
             )}
 
             {activeTab === 'analytics' && (

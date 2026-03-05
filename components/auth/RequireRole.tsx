@@ -1,63 +1,53 @@
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { AccountCategory, SeekerType, ProviderType } from '../../types/database';
-import { Loader, ShieldX } from 'lucide-react';
+import type { AccountCategory, SeekerType, ProviderType } from '../../types/database';
 
 interface RequireRoleProps {
+    /** Allowed account categories (seeker, provider, admin) */
+    allowedCats?: AccountCategory[];
+    /** Allowed sub-types (individual, company, law_firm, etc.) */
+    allowedTypes?: (SeekerType | ProviderType)[];
+    /** Children to render if authorized */
     children: React.ReactNode;
-    allowedCategories?: AccountCategory[];
-    allowedSeekerTypes?: SeekerType[];
-    allowedProviderTypes?: ProviderType[];
 }
 
-const RequireRole: React.FC<RequireRoleProps> = ({
-    children,
-    allowedCategories,
-    allowedSeekerTypes,
-    allowedProviderTypes,
-}) => {
-    const { profile, isLoading } = useAuth();
-    const { isRTL } = useLanguage();
+/**
+ * Route guard that checks if the user's profile matches the allowed roles.
+ * If not, redirects to the user's correct dashboard path.
+ *
+ * Usage in App.tsx:
+ * ```tsx
+ * <RequireRole allowedCats={['seeker']} allowedTypes={['company']}>
+ *   <CompanyDashboard />
+ * </RequireRole>
+ * ```
+ */
+const RequireRole: React.FC<RequireRoleProps> = ({ allowedCats, allowedTypes, children }) => {
+    const { profile, isLoading, getDashboardPath } = useAuth();
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <Loader className="animate-spin text-[#C8A762]" size={40} />
-            </div>
-        );
-    }
+    // Still loading — show nothing (RequireAuth handles the spinner)
+    if (isLoading) return null;
 
+    // No profile loaded yet — shouldn't happen if RequireAuth is wrapping this
     if (!profile) {
         return <Navigate to="/login" replace />;
     }
 
-    // Check category match
-    if (allowedCategories && !allowedCategories.includes(profile.account_cat)) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="text-center p-8">
-                    <ShieldX className="mx-auto text-red-400 mb-4" size={56} />
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-                        {isRTL ? 'غير مصرح' : 'Access Denied'}
-                    </h2>
-                    <p className="text-gray-500">
-                        {isRTL ? 'ليس لديك صلاحية للوصول لهذه الصفحة' : 'You do not have permission to access this page'}
-                    </p>
-                </div>
-            </div>
-        );
+    // Check account category
+    if (allowedCats && allowedCats.length > 0) {
+        if (!profile.account_cat || !allowedCats.includes(profile.account_cat)) {
+            // Redirect to the user's correct dashboard
+            return <Navigate to={getDashboardPath()} replace />;
+        }
     }
 
-    // Check seeker sub-type
-    if (allowedSeekerTypes && profile.s_type && !allowedSeekerTypes.includes(profile.s_type)) {
-        return <Navigate to="/" replace />;
-    }
-
-    // Check provider sub-type
-    if (allowedProviderTypes && profile.p_type && !allowedProviderTypes.includes(profile.p_type)) {
-        return <Navigate to="/" replace />;
+    // Check sub-type (s_type for seekers, p_type for providers)
+    if (allowedTypes && allowedTypes.length > 0) {
+        const userType = profile.account_cat === 'seeker' ? profile.s_type : profile.p_type;
+        if (!userType || !allowedTypes.includes(userType as SeekerType | ProviderType)) {
+            return <Navigate to={getDashboardPath()} replace />;
+        }
     }
 
     return <>{children}</>;

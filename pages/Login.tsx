@@ -19,10 +19,10 @@ const Login: React.FC = () => {
 
     // If already logged in, redirect to homepage
     useEffect(() => {
-        if (user && profile) {
+        if (user) {
             navigate('/', { replace: true });
         }
-    }, [user, profile]);
+    }, [user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,10 +34,9 @@ const Login: React.FC = () => {
         if (signInError) {
             setError(signInError);
             setLoading(false);
-        } else {
-            // Profile will load via AuthContext, then useEffect redirects
-            setLoading(false);
         }
+        // If success: onAuthStateChange sets user → useEffect redirects to '/'
+        // Keep loading=true until redirect happens to avoid flash
     };
 
     return (

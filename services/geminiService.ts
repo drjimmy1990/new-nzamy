@@ -1,6 +1,6 @@
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 
-const apiKey = process.env.API_KEY || '';
+const apiKey = (import.meta.env.VITE_GEMINI_KEY as string) || '';
 
 let chatSession: Chat | null = null;
 
@@ -14,7 +14,7 @@ export const initializeChat = async () => {
     return null;
   }
   const ai = getClient();
-  
+
   chatSession = ai.chats.create({
     model: 'gemini-2.5-flash',
     config: {
@@ -29,7 +29,7 @@ export const initializeChat = async () => {
       Tone: Professional, friendly, and helpful.`,
     },
   });
-  
+
   return chatSession;
 };
 

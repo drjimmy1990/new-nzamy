@@ -3,6 +3,7 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import DashboardSidebar from './DashboardSidebar';
+import NotificationBell from './NotificationBell';
 import { Menu, X, LogOut, Globe, Moon, Sun } from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
@@ -91,6 +92,7 @@ const DashboardLayout: React.FC = () => {
                             <button onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500" title="Toggle Language">
                                 <Globe size={18} />
                             </button>
+                            <NotificationBell />
                             <button onClick={toggleDark} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500" title="Toggle Theme">
                                 {dark ? <Sun size={18} /> : <Moon size={18} />}
                             </button>

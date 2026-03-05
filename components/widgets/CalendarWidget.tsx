@@ -7,7 +7,7 @@ interface CalendarEvent {
     id: string;
     title: string;
     date: string;  // ISO string
-    type: string;
+    type?: string;
 }
 
 interface CalendarWidgetProps {

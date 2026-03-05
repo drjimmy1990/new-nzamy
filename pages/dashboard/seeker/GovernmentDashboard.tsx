@@ -1,11 +1,13 @@
 import * as React from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useMyRequests, useUpdateRequestStatus } from '../../../hooks/useServiceRequests';
 import StatsOverviewWidget from '../../../components/widgets/StatsOverviewWidget';
 import CaseTimelineWidget from '../../../components/widgets/CaseTimelineWidget';
-import { Shield, FileText, BarChart3, Search, Lock, CheckCircle, Loader } from 'lucide-react';
+import CreateRequestModal from '../../../components/widgets/CreateRequestModal';
+import { Shield, FileText, BarChart3, Search, Lock, CheckCircle, Loader, Plus } from 'lucide-react';
 
 type Tab = '' | 'compliance' | 'cases' | 'reports';
 
@@ -16,7 +18,8 @@ const GovernmentDashboard: React.FC = () => {
     const [searchParams] = useSearchParams();
     const activeTab = (searchParams.get('tab') || '') as Tab;
 
-    const { requests, loading } = useMyRequests(profile?.id);
+    const { requests, loading, refetch } = useMyRequests(profile?.id);
+    const [showModal, setShowModal] = useState(false);
     const activeCount = requests.filter(r => !['completed', 'cancelled'].includes(r.status)).length;
     const completedCount = requests.filter(r => r.status === 'completed').length;
 
@@ -33,6 +36,12 @@ const GovernmentDashboard: React.FC = () => {
                         { label_ar: 'مكتملة', label_en: 'Completed', value: completedCount, color: 'text-green-600' },
                         { label_ar: 'مستوى الامتثال', label_en: 'Compliance', value: '✓', color: 'text-green-600' },
                     ]} />
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="w-full py-4 border-2 border-dashed border-[#C8A762] rounded-xl text-[#C8A762] font-bold hover:bg-[#C8A762]/10 transition flex items-center justify-center gap-2"
+                    >
+                        <Plus size={20} /> {t('إنشاء طلب جديد', 'Create New Request')}
+                    </button>
                     {loading ? (
                         <div className="flex justify-center py-4"><Loader className="animate-spin text-[#C8A762]" size={24} /></div>
                     ) : requests.slice(0, 5).map(req => (
@@ -98,6 +107,13 @@ const GovernmentDashboard: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Create Request Modal */}
+            <CreateRequestModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onCreated={() => refetch()}
+            />
         </div>
     );
 };

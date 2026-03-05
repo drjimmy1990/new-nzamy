@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../services/supabaseClient';
+import { supabasePublic as supabase } from '../services/supabaseClient';
 import { Country, AccountCategory, SeekerType, ProviderType } from '../types/database';
 import {
     ArrowLeft, ArrowRight, Globe, Users, Briefcase,

@@ -1,8 +1,10 @@
 import * as React from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useProviderRequests, usePoolRequests, useUpdateRequestStatus } from '../../../hooks/useServiceRequests';
+import { useDocuments, useUploadDocument } from '../../../hooks/useDocuments';
 import StatsOverviewWidget from '../../../components/widgets/StatsOverviewWidget';
 import OrderInboxWidget from '../../../components/widgets/OrderInboxWidget';
 import KanbanBoardWidget from '../../../components/widgets/KanbanBoardWidget';
@@ -22,6 +24,12 @@ const ArbitratorDashboard: React.FC = () => {
     const { requests: poolRequests, loading: poolLoading } = usePoolRequests(profile?.country_id || undefined);
     const { requests: myRequests, loading: myLoading, refetch } = useProviderRequests(profile?.id);
     const { update: updateStatus } = useUpdateRequestStatus();
+
+    // Evidence room: track selected case for document upload
+    const [selectedCaseId, setSelectedCaseId] = useState<string | undefined>(undefined);
+    const activeCaseId = selectedCaseId || myRequests.find(r => r.status === 'in_progress')?.id;
+    const { documents, loading: docsLoading, refetch: refetchDocs } = useDocuments(activeCaseId);
+    const { upload, uploading } = useUploadDocument();
 
     const activeCount = myRequests.filter(r => !['completed', 'cancelled'].includes(r.status)).length;
     const completedCount = myRequests.filter(r => r.status === 'completed').length;
@@ -66,13 +74,33 @@ const ArbitratorDashboard: React.FC = () => {
             {activeTab === 'evidence' && (
                 <div className="space-y-4">
                     <h2 className="text-lg font-bold text-gray-800 dark:text-white">{t('غرفة الأدلة', 'Evidence Room')}</h2>
+                    {/* Case selector */}
+                    {myRequests.filter(r => r.status !== 'completed').length > 0 && (
+                        <select
+                            value={activeCaseId || ''}
+                            onChange={e => setSelectedCaseId(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-gray-800 dark:text-white"
+                        >
+                            <option value="">{t('اختر قضية', 'Select a case')}</option>
+                            {myRequests.filter(r => r.status !== 'completed').map(r => (
+                                <option key={r.id} value={r.id}>{r.title}</option>
+                            ))}
+                        </select>
+                    )}
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center gap-2 mb-4">
                             <Lock className="text-[#C8A762]" size={20} />
                             <span className="font-bold text-gray-700 dark:text-white">{t('مستندات مشفّرة', 'Encrypted Documents')}</span>
                             <span className="ml-auto text-xs text-green-500 flex items-center gap-1"><Shield size={12} /> {t('مؤمّن', 'Secured')}</span>
                         </div>
-                        <DocumentVaultWidget />
+                        <DocumentVaultWidget
+                            documents={documents}
+                            loading={docsLoading}
+                            onUpload={activeCaseId && profile?.id ? (file, type) => {
+                                upload(activeCaseId, profile.id, file, type).then(() => refetchDocs());
+                            } : undefined}
+                            uploading={uploading}
+                        />
                     </div>
                 </div>
             )}

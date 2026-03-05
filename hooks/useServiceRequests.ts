@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, supabasePublic } from '../services/supabaseClient';
 import { ServiceRequest, RequestStatus, ServiceCategoryV2 } from '../types/database';
 
 // Fetch service requests for a seeker (their own)
@@ -10,13 +10,25 @@ export function useMyRequests(userId: string | undefined) {
     const fetch = useCallback(async () => {
         if (!userId) { setLoading(false); return; }
         setLoading(true);
+
+        // Try authenticated client first
         const { data, error } = await supabase
             .from('service_requests')
             .select('*')
             .eq('seeker_id', userId)
             .order('created_at', { ascending: false });
-        if (error) console.error('Error fetching my requests:', error);
-        setRequests((data as ServiceRequest[]) || []);
+
+        if (data && !error) {
+            setRequests(data as ServiceRequest[]);
+        } else {
+            // Fallback to public client
+            const { data: pubData } = await supabasePublic
+                .from('service_requests')
+                .select('*')
+                .eq('seeker_id', userId)
+                .order('created_at', { ascending: false });
+            setRequests((pubData as ServiceRequest[]) || []);
+        }
         setLoading(false);
     }, [userId]);
 
@@ -32,13 +44,23 @@ export function useProviderRequests(providerId: string | undefined) {
     const fetch = useCallback(async () => {
         if (!providerId) { setLoading(false); return; }
         setLoading(true);
+
         const { data, error } = await supabase
             .from('service_requests')
             .select('*')
             .eq('provider_id', providerId)
             .order('created_at', { ascending: false });
-        if (error) console.error('Error fetching provider requests:', error);
-        setRequests((data as ServiceRequest[]) || []);
+
+        if (data && !error) {
+            setRequests(data as ServiceRequest[]);
+        } else {
+            const { data: pubData } = await supabasePublic
+                .from('service_requests')
+                .select('*')
+                .eq('provider_id', providerId)
+                .order('created_at', { ascending: false });
+            setRequests((pubData as ServiceRequest[]) || []);
+        }
         setLoading(false);
     }, [providerId]);
 
@@ -54,6 +76,7 @@ export function usePoolRequests(countryId: string | undefined) {
     const fetch = useCallback(async () => {
         if (!countryId) { setLoading(false); return; }
         setLoading(true);
+
         const { data, error } = await supabase
             .from('service_requests')
             .select('*')
@@ -61,8 +84,19 @@ export function usePoolRequests(countryId: string | undefined) {
             .eq('status', 'pending_match')
             .is('provider_id', null)
             .order('created_at', { ascending: false });
-        if (error) console.error('Error fetching pool requests:', error);
-        setRequests((data as ServiceRequest[]) || []);
+
+        if (data && !error) {
+            setRequests(data as ServiceRequest[]);
+        } else {
+            const { data: pubData } = await supabasePublic
+                .from('service_requests')
+                .select('*')
+                .eq('country_id', countryId)
+                .eq('status', 'pending_match')
+                .is('provider_id', null)
+                .order('created_at', { ascending: false });
+            setRequests((pubData as ServiceRequest[]) || []);
+        }
         setLoading(false);
     }, [countryId]);
 
@@ -105,3 +139,4 @@ export function useUpdateRequestStatus() {
     };
     return { update };
 }
+
